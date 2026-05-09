@@ -1,0 +1,113 @@
+@import './variables.scss';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-size: $font-size-base;
+  color: $text-primary;
+  background-color: $bg-color;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s;
+
+  &:hover {
+    color: $primary-color;
+  }
+}
+
+// 通用容器
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+// 卡片样式
+.card {
+  background-color: $bg-white;
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-light;
+  padding: $spacing-xl;
+}
+
+// 按钮间距
+.btn-group {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+// 文本省略
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ellipsis-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// 价格样式
+.price {
+  color: $danger-color;
+  font-weight: 500;
+
+  .symbol {
+    font-size: $font-size-sm;
+    margin-right: 2px;
+  }
+
+  .value {
+    font-size: $font-size-xl;
+  }
+}
+
+// Element Plus 样式覆盖
+.el-button--primary {
+  background-color: $primary-color;
+  border-color: $primary-color;
+
+  &:hover {
+    background-color: mix(white, $primary-color, 20%);
+    border-color: mix(white, $primary-color, 20%);
+  }
+}
+
+.el-badge__content {
+  background-color: $danger-color;
+}
+
+// 加载状态
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+// 错误提示
+.error-message {
+  color: $danger-color;
+  font-size: $font-size-sm;
+  margin-top: $spacing-sm;
+}

@@ -37,26 +37,56 @@ public class JwtUtil {
     }
 
     /**
-     * 生成 JWT Token
+     * 生成会员 JWT Token
      *
      * @param memberId  会员ID
      * @param username  用户名
      * @return JWT Token 字符串
      */
     public String generateToken(Long memberId, String username) {
+        return generateToken(memberId, username, "member", null);
+    }
+
+    /**
+     * 生成管理员 JWT Token
+     *
+     * @param userId    用户ID
+     * @param username  用户名
+     * @return JWT Token 字符串
+     */
+    public String generateAdminToken(Long userId, String username) {
+        return generateToken(userId, username, "admin", null);
+    }
+
+    /**
+     * 生成 JWT Token（通用方法）
+     *
+     * @param userId    用户ID
+     * @param username  用户名
+     * @param userType  用户类型：admin/member
+     * @param deptId    部门ID（可选，仅管理员需要）
+     * @return JWT Token 字符串
+     */
+    public String generateToken(Long userId, String username, String userType, Long deptId) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + jwtConfig.getExpiration());
 
-        String token = Jwts.builder()
+        var builder = Jwts.builder()
             .subject(username)
-            .claim("memberId", memberId)
+            .claim("userId", userId)
             .claim("username", username)
+            .claim("userType", userType)
             .issuedAt(now)
             .expiration(expiration)
-            .signWith(signingKey)
-            .compact();
+            .signWith(signingKey);
 
-        log.debug("[JwtUtil] 生成 Token 成功, memberId={}, username={}", memberId, username);
+        if (deptId != null) {
+            builder.claim("deptId", deptId);
+        }
+
+        String token = builder.compact();
+
+        log.debug("[JwtUtil] 生成 Token 成功, userId={}, username={}, userType={}", userId, username, userType);
         return token;
     }
 
@@ -108,14 +138,46 @@ public class JwtUtil {
     }
 
     /**
-     * 从 Token 中获取会员ID
+     * 从 Token 中获取用户ID（通用）
+     *
+     * @param token JWT Token
+     * @return 用户ID
+     */
+    public Long getUserId(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("userId", Long.class);
+    }
+
+    /**
+     * 从 Token 中获取会员ID（兼容旧方法）
      *
      * @param token JWT Token
      * @return 会员ID
      */
     public Long getMemberId(String token) {
+        return getUserId(token);
+    }
+
+    /**
+     * 从 Token 中获取用户类型
+     *
+     * @param token JWT Token
+     * @return 用户类型：admin/member
+     */
+    public String getUserType(String token) {
         Claims claims = parseToken(token);
-        return claims.get("memberId", Long.class);
+        return claims.get("userType", String.class);
+    }
+
+    /**
+     * 从 Token 中获取部门ID
+     *
+     * @param token JWT Token
+     * @return 部门ID
+     */
+    public Long getDeptId(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("deptId", Long.class);
     }
 
     /**

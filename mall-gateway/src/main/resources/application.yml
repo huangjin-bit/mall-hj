@@ -17,6 +17,13 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: mall-auth-sys
+          uri: lb://mall-auth
+          predicates:
+            - Path=/api/sys/**
+          filters:
+            - StripPrefix=1
+
         - id: mall-member
           uri: lb://mall-member
           predicates:

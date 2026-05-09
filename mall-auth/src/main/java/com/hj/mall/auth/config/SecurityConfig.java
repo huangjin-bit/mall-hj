@@ -40,8 +40,10 @@ public class SecurityConfig {
 
             // 配置授权规则
             .authorizeHttpRequests(auth -> auth
-                // 认证相关接口全部允许访问
+                // 会员认证相关接口全部允许访问
                 .requestMatchers("/auth/**").permitAll()
+                // 系统管理员登录接口允许访问
+                .requestMatchers("/sys/login").permitAll()
                 // Feign 内部调用接口允许访问
                 .requestMatchers("/feign/**").permitAll()
                 // 其他请求也允许访问（由网关统一鉴权）

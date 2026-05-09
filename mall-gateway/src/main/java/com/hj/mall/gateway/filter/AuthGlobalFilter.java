@@ -28,11 +28,18 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private static final List<String> WHITE_LIST = List.of(
             "/auth/**",
+            "/sys/login",
             "/categories/**",
             "/brands/**",
             "/spu/**",
             "/sku/**",
-            "/feign/**"
+            "/feign/**",
+            "/search/**",
+            "/home-adv/**",
+            "/home-subject/**",
+            "/seckill-session/**",
+            "/seckill-sku/**",
+            "/coupon/available"
     );
 
     @Override
