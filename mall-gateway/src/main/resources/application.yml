@@ -1,0 +1,91 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mall-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: mall-auth
+          uri: lb://mall-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-member
+          uri: lb://mall-member
+          predicates:
+            - Path=/api/member/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-product
+          uri: lb://mall-product
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-order
+          uri: lb://mall-order
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-seckill
+          uri: lb://mall-seckill
+          predicates:
+            - Path=/api/seckill/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-ware
+          uri: lb://mall-ware
+          predicates:
+            - Path=/api/ware/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-search
+          uri: lb://mall-search
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-third-party
+          uri: lb://mall-third-party
+          predicates:
+            - Path=/api/thirdparty/**
+          filters:
+            - StripPrefix=1
+
+        - id: mall-cart
+          uri: lb://mall-cart
+          predicates:
+            - Path=/api/cart/**
+          filters:
+            - StripPrefix=1
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+
+jwt:
+  secret: mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256
+  header: Authorization
+  token-prefix: "Bearer "
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

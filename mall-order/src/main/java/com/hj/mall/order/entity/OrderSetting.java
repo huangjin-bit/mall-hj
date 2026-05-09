@@ -1,0 +1,32 @@
+package com.hj.mall.order.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+@TableName("oms_order_setting")
+public class OrderSetting {
+
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+
+    private Integer flashOrderOvertime;
+
+    private Integer normalOrderOvertime;
+
+    private Integer confirmOvertime;
+
+    private Integer finishOvertime;
+
+    private Integer commentOvertime;
+
+    private Long memberLevel;
+
+    private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
+}

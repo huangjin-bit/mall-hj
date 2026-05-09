@@ -1,0 +1,28 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: mall-third-party
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: public
+        group: DEFAULT_GROUP
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# MinIO 配置
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: mall
+
+# 日志配置
+logging:
+  level:
+    com.hj.mall.thirdparty: debug
