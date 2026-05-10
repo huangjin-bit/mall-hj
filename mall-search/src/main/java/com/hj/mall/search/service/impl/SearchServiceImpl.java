@@ -72,17 +72,20 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if (param.getMinPrice() != null || param.getMaxPrice() != null) {
-            var rangeBuilder = new co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery.Builder()
-                    .field("price");
-
-            if (param.getMinPrice() != null) {
-                rangeBuilder.gte(JsonData.of(param.getMinPrice().doubleValue()));
-            }
-            if (param.getMaxPrice() != null) {
-                rangeBuilder.lte(JsonData.of(param.getMaxPrice().doubleValue()));
-            }
-
-            boolQueryBuilder.filter(f -> f.range(rangeBuilder.build()));
+            boolQueryBuilder.filter(f -> f
+                    .range(r -> r
+                            .untyped(u -> {
+                                u.field("price");
+                                if (param.getMinPrice() != null) {
+                                    u.gte(JsonData.of(param.getMinPrice().doubleValue()));
+                                }
+                                if (param.getMaxPrice() != null) {
+                                    u.lte(JsonData.of(param.getMaxPrice().doubleValue()));
+                                }
+                                return u;
+                            })
+                    )
+            );
         }
 
         queryBuilder.withQuery(boolQueryBuilder.build()._toQuery());

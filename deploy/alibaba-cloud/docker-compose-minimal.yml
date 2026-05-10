@@ -1,0 +1,74 @@
+# Mall-HJ Minimal Test Deployment
+# Only: MySQL + Redis + Nacos + Gateway + Auth
+# Fits in 2C2G
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mall-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --max-connections=30 --innodb-buffer-pool-size=64M --performance-schema=OFF --table-definition-cache=200 --table-open-cache=200
+    restart: unless-stopped
+    mem_limit: 250m
+
+  redis:
+    image: redis:7-alpine
+    container_name: mall-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    mem_limit: 100m
+
+  nacos:
+    image: nacos/nacos-server:v2.4.3-slim
+    container_name: mall-nacos
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 128m
+      JVM_XMX: 200m
+    ports:
+      - "8848:8848"
+    restart: unless-stopped
+    mem_limit: 400m
+
+  mall-gateway:
+    image: mall-gateway:latest
+    container_name: mall-gateway
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SERVER_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - nacos
+    restart: unless-stopped
+    mem_limit: 300m
+
+  mall-auth:
+    image: mall-auth:latest
+    container_name: mall-auth
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATA_REDIS_HOST=redis
+      - SERVER_PORT=8081
+    depends_on:
+      - mysql
+      - redis
+      - nacos
+    restart: unless-stopped
+    mem_limit: 300m
+
+volumes:
+  mysql_data:

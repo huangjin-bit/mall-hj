@@ -28,7 +28,7 @@ public class OrderFeignFallback implements FallbackFactory<OrderFeignClient> {
             public Result<List<OrderItem>> listOrderItems(Long orderId) {
                 log.error("[OrderFeignFallback] listOrderItems 调用失败, orderId={}, error={}",
                         orderId, cause.getMessage());
-                return Result.error("订单服务暂不可用", Collections.emptyList());
+                return Result.error("订单服务暂不可用");
             }
         };
     }

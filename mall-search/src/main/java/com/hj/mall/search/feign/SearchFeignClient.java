@@ -1,6 +1,6 @@
 package com.hj.mall.search.feign;
 
-import com.hj.mall.common.dto.Result;
+import com.hj.mall.common.result.Result;
 import com.hj.mall.search.model.SkuEsModel;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;

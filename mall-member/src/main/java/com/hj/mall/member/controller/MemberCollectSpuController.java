@@ -46,7 +46,7 @@ public class MemberCollectSpuController {
     public Result<Void> remove(
             @RequestParam Long memberId,
             @RequestParam Long spuId) {
-        collectService.removeCollect(memberId, spuId);
+        collectService.remove(memberId, spuId);
         return Result.ok();
     }
 }

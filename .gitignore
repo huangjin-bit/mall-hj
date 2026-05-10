@@ -39,3 +39,10 @@ dist/
 *.bak
 *.swp
 *~
+
+# Sensitive config — use application-prod.yml.example as template
+# Production configs with real passwords/keys should NOT be committed
+**/src/main/resources/application-prod.yml
+
+# Claude Code
+.claude/

@@ -1,6 +1,8 @@
 package com.hj.mall.ware.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hj.mall.ware.entity.WareOrderTaskDetail;
 import com.hj.mall.ware.mapper.WareOrderTaskDetailMapper;
 import com.hj.mall.ware.service.WareOrderTaskDetailService;
@@ -34,5 +36,30 @@ public class WareOrderTaskDetailServiceImpl implements WareOrderTaskDetailServic
         if (details != null && !details.isEmpty()) {
             details.forEach(this::save);
         }
+    }
+
+    @Override
+    public IPage<WareOrderTaskDetail> listPage(Page<WareOrderTaskDetail> page, Long taskId) {
+        LambdaQueryWrapper<WareOrderTaskDetail> wrapper = new LambdaQueryWrapper<>();
+        if (taskId != null) {
+            wrapper.eq(WareOrderTaskDetail::getTaskId, taskId);
+        }
+        wrapper.orderByAsc(WareOrderTaskDetail::getCreateTime);
+        return wareOrderTaskDetailMapper.selectPage(page, wrapper);
+    }
+
+    @Override
+    public WareOrderTaskDetail getById(Long id) {
+        return wareOrderTaskDetailMapper.selectById(id);
+    }
+
+    @Override
+    public void updateById(WareOrderTaskDetail detail) {
+        wareOrderTaskDetailMapper.updateById(detail);
+    }
+
+    @Override
+    public void removeBatch(List<Long> ids) {
+        wareOrderTaskDetailMapper.deleteBatchIds(ids);
     }
 }

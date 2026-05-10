@@ -33,7 +33,7 @@ public class OrderReturnReasonServiceImpl implements OrderReturnReasonService {
     public OrderReturnReason getById(Long id) {
         OrderReturnReason reason = returnReasonMapper.selectById(id);
         if (reason == null) {
-            throw new BizException(ResultCode.PARAM_ERROR);
+            throw new BizException(ResultCode.NOT_FOUND);
         }
         return reason;
     }

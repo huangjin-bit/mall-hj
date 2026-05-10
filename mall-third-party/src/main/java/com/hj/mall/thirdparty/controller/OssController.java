@@ -1,6 +1,6 @@
 package com.hj.mall.thirdparty.controller;
 
-import com.hj.mall.common.api.Result;
+import com.hj.mall.common.result.Result;
 import com.hj.mall.thirdparty.service.OSSService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

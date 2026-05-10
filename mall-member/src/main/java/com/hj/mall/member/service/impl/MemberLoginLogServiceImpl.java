@@ -21,10 +21,10 @@ public class MemberLoginLogServiceImpl implements MemberLoginLogService {
     private final MemberLoginLogMapper loginLogMapper;
 
     @Override
-    public void save(MemberLoginLog log) {
-        log.info("[MemberLoginLogService] 保存登录日志, memberId={}", log.getMemberId());
-        loginLogMapper.insert(log);
-        log.info("[MemberLoginLogService] 登录日志保存成功, id={}", log.getId());
+    public void save(MemberLoginLog loginLog) {
+        log.info("[MemberLoginLogService] 保存登录日志, memberId={}", loginLog.getMemberId());
+        loginLogMapper.insert(loginLog);
+        log.info("[MemberLoginLogService] 登录日志保存成功, id={}", loginLog.getId());
     }
 
     @Override

@@ -1,0 +1,86 @@
+# Mall-HJ Single Machine Deployment - Old PC (4C16G)
+# Using host network mode to bypass Docker iptables issues
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mall-mysql
+    network_mode: host
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    volumes:
+      - mall_mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: mall-redis
+    network_mode: host
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: mall-rabbitmq
+    network_mode: host
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+  nacos:
+    image: nacos/nacos-server:v2.4.3-slim
+    container_name: mall-nacos
+    network_mode: host
+    environment:
+      MODE: standalone
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+    restart: unless-stopped
+
+  mall-gateway:
+    image: mall-gateway:latest
+    container_name: mall-gateway
+    network_mode: host
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
+    depends_on:
+      - nacos
+    restart: unless-stopped
+
+  mall-auth:
+    image: mall-auth:latest
+    container_name: mall-auth
+    network_mode: host
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATA_REDIS_HOST=127.0.0.1
+    depends_on:
+      - mysql
+      - redis
+      - nacos
+    restart: unless-stopped
+
+  mall-product:
+    image: mall-product:latest
+    container_name: mall-product
+    network_mode: host
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/mall_product?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATA_REDIS_HOST=127.0.0.1
+    depends_on:
+      - mysql
+      - redis
+      - nacos
+    restart: unless-stopped
+
+volumes:
+  mall_mysql_data:

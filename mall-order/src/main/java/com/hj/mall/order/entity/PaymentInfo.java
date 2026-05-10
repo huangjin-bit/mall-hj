@@ -32,4 +32,22 @@ public class PaymentInfo {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
+
+    // 订单ID
+    private Long orderId;
+
+    // 支付宝交易号
+    private String alipayTradeNo;
+
+    // 订单总金额
+    private BigDecimal totalAmount;
+
+    // 支付主题
+    private String subject;
+
+    // 支付状态
+    private String paymentStatus;
+
+    // 确认时间
+    private LocalDateTime confirmTime;
 }

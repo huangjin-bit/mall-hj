@@ -1,0 +1,37 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.client.serviceregistry.ServiceRegistryAutoConfiguration
+      - org.springframework.cloud.client.discovery.simple.SimpleDiscoveryClientAutoConfiguration
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: assign_id
+
+jwt:
+  secret: mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256
+  expiration: 86400000
+  token-prefix: "Bearer "
+  header: Authorization
+
+mall:
+  common:
+    sign-key: ""

@@ -70,7 +70,7 @@ public class MemberReceiveAddressController {
      */
     @PutMapping("/{id}/default")
     public Result<Void> setDefault(@PathVariable Long id, @RequestParam Long memberId) {
-        addressService.setDefaultAddress(id, memberId);
+        addressService.setDefault(id, memberId);
         return Result.ok();
     }
 }

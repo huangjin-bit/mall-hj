@@ -1,6 +1,6 @@
 package com.hj.mall.search.controller;
 
-import com.hj.mall.common.dto.Result;
+import com.hj.mall.common.result.Result;
 import com.hj.mall.search.model.SkuEsModel;
 import com.hj.mall.search.service.SearchService;
 import lombok.RequiredArgsConstructor;

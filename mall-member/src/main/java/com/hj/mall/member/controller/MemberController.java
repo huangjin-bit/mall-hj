@@ -3,8 +3,12 @@ package com.hj.mall.member.controller;
 import com.hj.mall.common.result.Result;
 import com.hj.mall.member.entity.Member;
 import com.hj.mall.member.service.MemberService;
+import com.hj.mall.member.vo.MemberLoginVO;
+import com.hj.mall.member.vo.MemberRegisterVO;
+import com.hj.mall.member.vo.SocialUserVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,5 +79,41 @@ public class MemberController {
     public Result<Member> getByPhone(@PathVariable String phone) {
         Member member = memberService.getByPhone(phone);
         return Result.ok(member);
+    }
+
+    /**
+     * 会员注册
+     */
+    @PostMapping("/register")
+    public Result<Long> register(@Valid @RequestBody MemberRegisterVO vo) {
+        Long memberId = memberService.register(vo);
+        return Result.ok(memberId);
+    }
+
+    /**
+     * 会员登录
+     */
+    @PostMapping("/login")
+    public Result<Member> login(@Valid @RequestBody MemberLoginVO vo) {
+        Member member = memberService.login(vo);
+        return Result.ok(member);
+    }
+
+    /**
+     * 社交登录（OAuth2）
+     */
+    @PostMapping("/oauth2/login")
+    public Result<Member> oauthLogin(@RequestBody SocialUserVO vo) {
+        Member member = memberService.oauthLogin(vo);
+        return Result.ok(member);
+    }
+
+    /**
+     * 获取会员总数
+     */
+    @GetMapping("/count")
+    public Result<Long> count() {
+        Long count = memberService.count();
+        return Result.ok(count);
     }
 }

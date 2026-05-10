@@ -3,6 +3,9 @@ package com.hj.mall.member.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hj.mall.member.entity.Member;
+import com.hj.mall.member.vo.MemberLoginVO;
+import com.hj.mall.member.vo.MemberRegisterVO;
+import com.hj.mall.member.vo.SocialUserVO;
 
 import java.util.List;
 
@@ -71,4 +74,31 @@ public interface MemberService {
      * @param change 成长值变化值（正数增加，负数减少）
      */
     void updateGrowth(Long memberId, int change);
+
+    /**
+     * 会员注册
+     * @param vo 注册信息
+     * @return 会员ID
+     */
+    Long register(MemberRegisterVO vo);
+
+    /**
+     * 会员登录
+     * @param vo 登录信息
+     * @return 会员信息
+     */
+    Member login(MemberLoginVO vo);
+
+    /**
+     * 社交登录（OAuth2）
+     * @param vo 社交用户信息
+     * @return 会员信息
+     */
+    Member oauthLogin(SocialUserVO vo);
+
+    /**
+     * 获取会员总数
+     * @return 会员总数
+     */
+    Long count();
 }

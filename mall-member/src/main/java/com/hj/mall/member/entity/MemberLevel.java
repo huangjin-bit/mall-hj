@@ -49,6 +49,31 @@ public class MemberLevel {
     private BigDecimal discount;
 
     /**
+     * 每次评价获取成长值
+     */
+    private Integer commentGrowthPoint;
+
+    /**
+     * 免邮特权：0->无；1->有
+     */
+    private Integer priviledgeFreeFreight;
+
+    /**
+     * 会员价格特权：0->无；1->有
+     */
+    private Integer priviledgeMemberPrice;
+
+    /**
+     * 生日特权：0->无；1->有
+     */
+    private Integer priviledgeBirthday;
+
+    /**
+     * 备注
+     */
+    private String note;
+
+    /**
      * 状态：0->禁用；1->启用
      */
     private Integer status;

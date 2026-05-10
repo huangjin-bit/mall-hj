@@ -5,15 +5,23 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hj.mall.common.exception.BizException;
 import com.hj.mall.common.result.ResultCode;
+import com.hj.mall.member.constant.MemberConstant;
 import com.hj.mall.member.entity.Member;
+import com.hj.mall.member.entity.MemberAuth;
+import com.hj.mall.member.mapper.MemberAuthMapper;
 import com.hj.mall.member.mapper.MemberMapper;
 import com.hj.mall.member.service.MemberService;
+import com.hj.mall.member.vo.MemberLoginVO;
+import com.hj.mall.member.vo.MemberRegisterVO;
+import com.hj.mall.member.vo.SocialUserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -25,6 +33,8 @@ import java.util.List;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberMapper memberMapper;
+    private final MemberAuthMapper memberAuthMapper;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
     public IPage<Member> listPage(Page<Member> page, String key) {
@@ -167,5 +177,133 @@ public class MemberServiceImpl implements MemberService {
         member.setGrowth(newGrowth);
         memberMapper.updateById(member);
         log.info("[MemberService] 成长值更新成功, memberId={}, newGrowth={}", memberId, newGrowth);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long register(MemberRegisterVO vo) {
+        log.info("[MemberService] 会员注册, username={}, phone={}", vo.getUserName(), vo.getPhone());
+
+        // 检查用户名是否已存在
+        Member existMember = getByUsername(vo.getUserName());
+        if (existMember != null) {
+            throw new BizException(ResultCode.MEMBER_EXIST);
+        }
+
+        // 检查手机号是否已存在
+        Member existPhone = getByPhone(vo.getPhone());
+        if (existPhone != null) {
+            throw new BizException(ResultCode.MEMBER_EXIST);
+        }
+
+        // 创建新会员
+        Member member = new Member();
+        member.setUsername(vo.getUserName());
+        member.setPhone(vo.getPhone());
+        member.setLevelId((long) MemberConstant.DEFAULT_LEVEL_STATUS);
+        member.setStatus(MemberConstant.Status.ENABLED);
+        member.setIntegration(0);
+        member.setGrowth(0);
+        member.setCreateTime(LocalDateTime.now());
+        member.setUpdateTime(LocalDateTime.now());
+
+        memberMapper.insert(member);
+
+        // 创建认证记录（用户名+密码）
+        MemberAuth auth = new MemberAuth();
+        auth.setMemberId(member.getId());
+        auth.setIdentityType("username");
+        auth.setIdentifier(vo.getUserName());
+        auth.setCredential(passwordEncoder.encode(vo.getPassword()));
+        auth.setVerified(1);
+        auth.setCreateTime(LocalDateTime.now());
+        auth.setUpdateTime(LocalDateTime.now());
+        memberAuthMapper.insert(auth);
+
+        log.info("[MemberService] 会员注册成功, id={}", member.getId());
+        return member.getId();
+    }
+
+    @Override
+    public Member login(MemberLoginVO vo) {
+        log.info("[MemberService] 会员登录, account={}", vo.getLoginAccount());
+
+        // 先通过 MemberAuth 查找认证记录
+        LambdaQueryWrapper<MemberAuth> authWrapper = new LambdaQueryWrapper<>();
+        authWrapper.eq(MemberAuth::getIdentifier, vo.getLoginAccount())
+                   .in(MemberAuth::getIdentityType, "username", "phone");
+        MemberAuth auth = memberAuthMapper.selectOne(authWrapper);
+        if (auth == null) {
+            throw new BizException(ResultCode.MEMBER_NOT_FOUND);
+        }
+
+        // 验证密码
+        if (!passwordEncoder.matches(vo.getPassword(), auth.getCredential())) {
+            throw new BizException(ResultCode.PASSWORD_ERROR);
+        }
+
+        // 查询会员信息
+        Member member = memberMapper.selectById(auth.getMemberId());
+        if (member == null) {
+            throw new BizException(ResultCode.MEMBER_NOT_FOUND);
+        }
+
+        // 检查账号状态
+        if (member.getStatus() == MemberConstant.Status.DISABLED) {
+            throw new BizException("账号已被禁用");
+        }
+
+        log.info("[MemberService] 会员登录成功, id={}", member.getId());
+        return member;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Member oauthLogin(SocialUserVO vo) {
+        log.info("[MemberService] 社交登录, socialType={}, uid={}", vo.getSocialType(), vo.getUid());
+
+        // 根据 identityType + identifier 查询是否已绑定
+        LambdaQueryWrapper<MemberAuth> authWrapper = new LambdaQueryWrapper<>();
+        authWrapper.eq(MemberAuth::getIdentityType, vo.getSocialType())
+                   .eq(MemberAuth::getIdentifier, vo.getUid());
+        MemberAuth existAuth = memberAuthMapper.selectOne(authWrapper);
+
+        if (existAuth != null) {
+            Member member = memberMapper.selectById(existAuth.getMemberId());
+            log.info("[MemberService] 社交账号已存在, id={}", member.getId());
+            return member;
+        }
+
+        // 创建新会员（社交登录）
+        Member member = new Member();
+        member.setUsername("social_" + vo.getUid());
+        member.setLevelId((long) MemberConstant.DEFAULT_LEVEL_STATUS);
+        member.setStatus(MemberConstant.Status.ENABLED);
+        member.setIntegration(0);
+        member.setGrowth(0);
+        member.setCreateTime(LocalDateTime.now());
+        member.setUpdateTime(LocalDateTime.now());
+        memberMapper.insert(member);
+
+        // 创建社交认证记录
+        MemberAuth auth = new MemberAuth();
+        auth.setMemberId(member.getId());
+        auth.setIdentityType(vo.getSocialType());
+        auth.setIdentifier(vo.getUid());
+        auth.setCredential(vo.getAccessToken());
+        auth.setVerified(1);
+        auth.setCreateTime(LocalDateTime.now());
+        auth.setUpdateTime(LocalDateTime.now());
+        memberAuthMapper.insert(auth);
+
+        log.info("[MemberService] 社交登录创建新会员成功, id={}", member.getId());
+        return member;
+    }
+
+    @Override
+    public Long count() {
+        Long count = memberMapper.selectCount(null);
+        log.info("[MemberService] 会员总数, count={}", count);
+        return count;
     }
 }

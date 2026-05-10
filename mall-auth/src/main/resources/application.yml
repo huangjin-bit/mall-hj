@@ -10,13 +10,14 @@ spring:
         server-addr: 127.0.0.1:8848
   datasource:
     url: jdbc:mysql://localhost:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -25,7 +26,7 @@ mybatis-plus:
       id-type: assign_id
 
 jwt:
-  secret: mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256
+  secret: ${JWT_SECRET:mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256}
   expiration: 86400000
   token-prefix: "Bearer "
   header: Authorization

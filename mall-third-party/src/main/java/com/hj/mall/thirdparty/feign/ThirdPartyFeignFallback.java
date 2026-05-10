@@ -1,6 +1,6 @@
 package com.hj.mall.thirdparty.feign;
 
-import com.hj.mall.common.api.Result;
+import com.hj.mall.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;

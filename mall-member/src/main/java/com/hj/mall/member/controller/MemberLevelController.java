@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 会员等级控制器
  */
@@ -25,7 +27,7 @@ public class MemberLevelController {
     public Result<IPage<MemberLevel>> list(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        IPage<MemberLevel> result = memberLevelService.page(new Page<>(page, size));
+        IPage<MemberLevel> result = memberLevelService.listPage(new Page<>(page, size));
         return Result.ok(result);
     }
 
@@ -61,7 +63,7 @@ public class MemberLevelController {
      */
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
-        memberLevelService.removeById(id);
+        memberLevelService.removeBatch(List.of(id));
         return Result.ok();
     }
 }

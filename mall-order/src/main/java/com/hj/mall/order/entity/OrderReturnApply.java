@@ -44,4 +44,52 @@ public class OrderReturnApply {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
+
+    // 会员用户名
+    private String memberUsername;
+
+    // 退货人姓名
+    private String returnName;
+
+    // 退货人电话
+    private String returnPhone;
+
+    // SKU图片
+    private String skuImg;
+
+    // SKU名称
+    private String skuName;
+
+    // SKU品牌
+    private String skuBrand;
+
+    // SKU属性值
+    private String skuAttrsVals;
+
+    // 退货数量
+    private Integer skuCount;
+
+    // SKU价格
+    private BigDecimal skuPrice;
+
+    // SKU实际价格
+    private BigDecimal skuRealPrice;
+
+    // 凭证图片
+    private String descPics;
+
+    // 处理人
+    private String handleMan;
+
+    // 收货人
+    private String receiveMan;
+
+    // 收货电话
+    private String receivePhone;
+
+    // 收货备注
+    private String receiveNote;
+
+    // 收货地址
+    private String companyAddress;
 }

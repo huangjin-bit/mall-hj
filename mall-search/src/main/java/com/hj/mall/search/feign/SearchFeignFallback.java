@@ -1,6 +1,6 @@
 package com.hj.mall.search.feign;
 
-import com.hj.mall.common.dto.Result;
+import com.hj.mall.common.result.Result;
 import com.hj.mall.search.model.SkuEsModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

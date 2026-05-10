@@ -1,0 +1,45 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.client.serviceregistry.ServiceRegistryAutoConfiguration
+      - org.springframework.cloud.client.discovery.simple.SimpleDiscoveryClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.apache.seata.spring.boot.autoconfigure.SeataAutoConfiguration
+      - org.apache.seata.spring.boot.autoconfigure.SeataDataSourceAutoConfiguration
+      - org.apache.seata.spring.boot.autoconfigure.SeataAutoConfiguration$SeataDataSourceConfiguration
+
+seata:
+  enabled: false
+  enable-auto-data-source-proxy: false
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: assign_id
+
+mall:
+  common:
+    sign-key: ""
+
+alipay:
+  app-id: test-app-id
+  app-private-key: test-private-key
+  alipay-public-key: test-public-key
+  gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+  return-url: http://localhost:8080/api/order/pay/success
+  notify-url: http://localhost:8080/api/order/pay/alipay/notify

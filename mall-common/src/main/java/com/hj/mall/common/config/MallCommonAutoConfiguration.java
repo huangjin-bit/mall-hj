@@ -7,6 +7,7 @@ import feign.RequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 
@@ -17,11 +18,9 @@ public class MallCommonAutoConfiguration {
     private String signKey;
 
     @Bean
+    @ConditionalOnMissingBean
     public HeaderSigner headerSigner() {
-        if (signKey.isEmpty()) {
-            return null; // 未配置密钥则跳过签名校验（开发模式）
-        }
-        return new HeaderSigner(signKey);
+        return new HeaderSigner(signKey.isEmpty() ? "default-dev-key" : signKey);
     }
 
     @Bean

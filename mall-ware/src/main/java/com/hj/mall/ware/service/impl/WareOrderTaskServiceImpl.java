@@ -1,11 +1,15 @@
 package com.hj.mall.ware.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hj.mall.ware.entity.WareOrderTask;
 import com.hj.mall.ware.mapper.WareOrderTaskMapper;
 import com.hj.mall.ware.service.WareOrderTaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,5 +41,20 @@ public class WareOrderTaskServiceImpl implements WareOrderTaskService {
         task.setId(id);
         task.setTaskStatus(status);
         wareOrderTaskMapper.updateById(task);
+    }
+
+    @Override
+    public IPage<WareOrderTask> listPage(Page<WareOrderTask> page) {
+        return wareOrderTaskMapper.selectPage(page, null);
+    }
+
+    @Override
+    public void updateById(WareOrderTask task) {
+        wareOrderTaskMapper.updateById(task);
+    }
+
+    @Override
+    public void removeBatch(List<Long> ids) {
+        wareOrderTaskMapper.deleteBatchIds(ids);
     }
 }

@@ -1,6 +1,6 @@
 package com.hj.mall.thirdparty.feign;
 
-import com.hj.mall.common.api.Result;
+import com.hj.mall.common.result.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;

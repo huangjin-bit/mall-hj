@@ -54,7 +54,7 @@ public class CouponServiceImpl implements CouponService {
         wrapper.eq(Coupon::getStatus, 1)
                .le(Coupon::getStartTime, LocalDateTime.now())
                .ge(Coupon::getEndTime, LocalDateTime.now())
-               .gt(Coupon::getTotalCount, Coupon::getReceivedCount)
+               .apply("total_count > received_count")
                .orderByDesc(Coupon::getCreateTime);
 
         return couponMapper.selectList(wrapper);

@@ -32,4 +32,7 @@ public class RefundInfo {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
+
+    // 退款金额
+    private BigDecimal refund;
 }

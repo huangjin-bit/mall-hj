@@ -18,17 +18,17 @@ public class ProductFeignFallback implements FallbackFactory<ProductFeignClient>
         return new ProductFeignClient() {
             @Override
             public Result<SkuInfo> getSkuInfo(Long skuId) {
-                return Result.error(ResultCode.INTERNAL_ERROR, "商品服务不可用");
+                return Result.error(ResultCode.INTERNAL_ERROR);
             }
 
             @Override
             public Result<SpuInfo> getSpuInfo(Long spuId) {
-                return Result.error(ResultCode.INTERNAL_ERROR, "商品服务不可用");
+                return Result.error(ResultCode.INTERNAL_ERROR);
             }
 
             @Override
             public Result<Void> refreshCategoryCache() {
-                return Result.error(ResultCode.INTERNAL_ERROR, "商品服务不可用");
+                return Result.error(ResultCode.INTERNAL_ERROR);
             }
         };
     }

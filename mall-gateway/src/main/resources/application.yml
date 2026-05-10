@@ -89,7 +89,7 @@ spring:
             allow-credentials: true
 
 jwt:
-  secret: mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256
+  secret: ${JWT_SECRET:mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256}
   header: Authorization
   token-prefix: "Bearer "
 

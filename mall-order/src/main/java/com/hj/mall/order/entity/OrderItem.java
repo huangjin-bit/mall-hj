@@ -40,4 +40,28 @@ public class OrderItem {
     private BigDecimal couponAmount;
 
     private LocalDateTime createTime;
+
+    // SPU图片
+    private String spuPic;
+
+    // SPU品牌
+    private String spuBrand;
+
+    // 分类ID
+    private Long categoryId;
+
+    // SKU属性值
+    private String skuAttrsVals;
+
+    // 积分抵扣金额
+    private BigDecimal integrationAmount;
+
+    // 实际支付金额
+    private BigDecimal realAmount;
+
+    // 赠送积分
+    private Integer giftIntegration;
+
+    // 赠送成长值
+    private Integer giftGrowth;
 }
