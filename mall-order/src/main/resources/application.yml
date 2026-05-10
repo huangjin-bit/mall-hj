@@ -52,3 +52,12 @@ alipay:
   gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
   return-url: http://localhost:8080/api/order/pay/success
   notify-url: http://your-domain.com/api/order/pay/alipay/notify
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}

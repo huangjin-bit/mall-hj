@@ -30,3 +30,12 @@ jwt:
   expiration: 86400000
   token-prefix: "Bearer "
   header: Authorization
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -39,3 +39,12 @@ seata:
       server-addr: 127.0.0.1:8848
       namespace: ""
       group: DEFAULT_GROUP
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}

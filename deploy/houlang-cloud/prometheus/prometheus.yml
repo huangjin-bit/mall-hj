@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'mall-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['ALIYUN_IP_PLACEHOLDER:8080']
+        labels:
+          group: 'gateway'
+
+  - job_name: 'mall-backend'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'OLD_PC_IP_PLACEHOLDER:8081'
+          - 'OLD_PC_IP_PLACEHOLDER:8082'
+          - 'OLD_PC_IP_PLACEHOLDER:8083'
+          - 'OLD_PC_IP_PLACEHOLDER:8084'
+          - 'OLD_PC_IP_PLACEHOLDER:8085'
+          - 'OLD_PC_IP_PLACEHOLDER:8086'
+          - 'OLD_PC_IP_PLACEHOLDER:8087'
+          - 'OLD_PC_IP_PLACEHOLDER:8088'
+          - 'OLD_PC_IP_PLACEHOLDER:8089'
+        labels:
+          group: 'backend'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,41 +1,17 @@
-# Mall-HJ Test Deployment - All on Alibaba Cloud
-# Minimal: MySQL + Redis + Nacos + Gateway + Auth + Product
-
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: mall-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      TZ: Asia/Shanghai
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --max-connections=50 --innodb-buffer-pool-size=64M --performance-schema=OFF
-    restart: unless-stopped
-    mem_limit: 300m
-
-  redis:
-    image: redis:7-alpine
-    container_name: mall-redis
-    ports:
-      - "6379:6379"
-    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
-    restart: unless-stopped
-    mem_limit: 180m
-
   nacos:
     image: nacos/nacos-server:v2.4.3-slim
     container_name: mall-nacos
     environment:
       MODE: standalone
-      PREFER_HOST_MODE: hostname
+      PREFER_HOST_MODE: ip
       JVM_XMS: 128m
-      JVM_XMX: 256m
+      JVM_XMX: 384m
+      NACOS_SERVER_IP: ${ALIYUN_IP}
     ports:
       - "8848:8848"
+    volumes:
+      - nacos_data:/home/nacos/data
     restart: unless-stopped
     mem_limit: 512m
 
@@ -43,48 +19,28 @@ services:
     image: mall-gateway:latest
     container_name: mall-gateway
     environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SERVER_PORT=8080
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_IP: ${ALIYUN_IP}
+      JWT_SECRET: ${JWT_SECRET:-mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256}
+    depends_on:
+      - nacos
     ports:
       - "8080:8080"
-    depends_on:
-      - nacos
     restart: unless-stopped
     mem_limit: 200m
 
-  mall-auth:
-    image: mall-auth:latest
-    container_name: mall-auth
-    environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_DATA_REDIS_HOST=redis
-      - SERVER_PORT=8081
+  nginx:
+    image: nginx:alpine
+    container_name: mall-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./mall-website-dist:/usr/share/nginx/html:ro
     depends_on:
-      - mysql
-      - redis
-      - nacos
+      - mall-gateway
     restart: unless-stopped
-    mem_limit: 200m
-
-  mall-product:
-    image: mall-product:latest
-    container_name: mall-product
-    environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mall_product?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_DATA_REDIS_HOST=redis
-      - SERVER_PORT=8083
-    depends_on:
-      - mysql
-      - redis
-      - nacos
-    restart: unless-stopped
-    mem_limit: 200m
+    mem_limit: 64m
 
 volumes:
-  mysql_data:
+  nacos_data:

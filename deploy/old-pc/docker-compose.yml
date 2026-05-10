@@ -1,86 +1,233 @@
-# Mall-HJ Single Machine Deployment - Old PC (4C16G)
-# Using host network mode to bypass Docker iptables issues
-
 services:
+  # ==================== Infrastructure ====================
   mysql:
     image: mysql:8.0
     container_name: mall-mysql
     network_mode: host
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
       TZ: Asia/Shanghai
     volumes:
       - mall_mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --max-connections=100
+      --innodb-buffer-pool-size=512M
     restart: unless-stopped
+    mem_limit: 700m
 
   redis:
     image: redis:7-alpine
     container_name: mall-redis
     network_mode: host
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
+    mem_limit: 320m
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: mall-rabbitmq
     network_mode: host
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - mall_rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
+    mem_limit: 512m
 
-  nacos:
-    image: nacos/nacos-server:v2.4.3-slim
-    container_name: mall-nacos
+  elasticsearch:
+    image: elasticsearch:8.15.0
+    container_name: mall-elasticsearch
     network_mode: host
     environment:
-      MODE: standalone
-      JVM_XMS: 256m
-      JVM_XMX: 512m
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - mall_es_data:/usr/share/elasticsearch/data
     restart: unless-stopped
+    mem_limit: 512m
 
-  mall-gateway:
-    image: mall-gateway:latest
-    container_name: mall-gateway
+  minio:
+    image: minio/minio:latest
+    container_name: mall-minio
     network_mode: host
     environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
-    depends_on:
-      - nacos
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - mall_minio_data:/data
     restart: unless-stopped
+    mem_limit: 256m
 
+  # ==================== Backend Services ====================
   mall-auth:
     image: mall-auth:latest
     container_name: mall-auth
     network_mode: host
     environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
-      - SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_DATA_REDIS_HOST=127.0.0.1
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SERVER_PORT: "8081"
+      JWT_SECRET: ${JWT_SECRET:-mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256}
     depends_on:
       - mysql
       - redis
-      - nacos
     restart: unless-stopped
+    mem_limit: 250m
+
+  mall-member:
+    image: mall-member:latest
+    container_name: mall-member
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall_member?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SERVER_PORT: "8082"
+    depends_on:
+      - mysql
+      - redis
+    restart: unless-stopped
+    mem_limit: 300m
 
   mall-product:
     image: mall-product:latest
     container_name: mall-product
     network_mode: host
     environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=127.0.0.1:8848
-      - SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/mall_product?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - SPRING_DATA_REDIS_HOST=127.0.0.1
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall_product?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SERVER_PORT: "8083"
     depends_on:
       - mysql
       - redis
-      - nacos
     restart: unless-stopped
+    mem_limit: 300m
+
+  mall-order:
+    image: mall-order:latest
+    container_name: mall-order
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall_order?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SPRING_RABBITMQ_HOST: 127.0.0.1
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      SEATA_ENABLED: "false"
+      SERVER_PORT: "8084"
+      JWT_SECRET: ${JWT_SECRET:-mall-hj-secret-key-must-be-at-least-256-bits-long-for-hs256}
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    mem_limit: 350m
+
+  mall-seckill:
+    image: mall-seckill:latest
+    container_name: mall-seckill
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall_seckill?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SPRING_RABBITMQ_HOST: 127.0.0.1
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      SERVER_PORT: "8085"
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    mem_limit: 350m
+
+  mall-ware:
+    image: mall-ware:latest
+    container_name: mall-ware
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall_ware?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SPRING_RABBITMQ_HOST: 127.0.0.1
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      SEATA_ENABLED: "false"
+      SERVER_PORT: "8086"
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    mem_limit: 300m
+
+  mall-search:
+    image: mall-search:latest
+    container_name: mall-search
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_ELASTICSEARCH_URIS: http://127.0.0.1:9200
+      SERVER_PORT: "8087"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    mem_limit: 300m
+
+  mall-third-party:
+    image: mall-third-party:latest
+    container_name: mall-third-party
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      MINIO_ENDPOINT: http://127.0.0.1:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-mall}
+      SERVER_PORT: "8088"
+    depends_on:
+      - minio
+    restart: unless-stopped
+    mem_limit: 200m
+
+  mall-cart:
+    image: mall-cart:latest
+    container_name: mall-cart
+    network_mode: host
+    environment:
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: ${ALIYUN_IP}:8848
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SPRING_DATA_REDIS_PORT: "6379"
+      SERVER_PORT: "8089"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    mem_limit: 200m
 
 volumes:
   mall_mysql_data:
+  mall_rabbitmq_data:
+  mall_es_data:
+  mall_minio_data:

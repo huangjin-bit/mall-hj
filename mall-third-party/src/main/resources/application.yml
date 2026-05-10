@@ -26,3 +26,12 @@ minio:
 logging:
   level:
     com.hj.mall.thirdparty: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}

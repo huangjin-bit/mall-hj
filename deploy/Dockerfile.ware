@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY mall-gateway.jar app.jar
-ENV JAVA_OPTS="-Xms64m -Xmx128m"
-EXPOSE 8080
+COPY mall-ware.jar app.jar
+ENV JAVA_OPTS="-Xms96m -Xmx192m"
+EXPOSE 8086
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

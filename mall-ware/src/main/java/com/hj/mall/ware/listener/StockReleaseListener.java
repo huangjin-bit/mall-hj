@@ -5,10 +5,8 @@ import com.hj.mall.common.result.Result;
 import com.hj.mall.ware.entity.WareOrderTaskDetail;
 import com.hj.mall.ware.entity.WareOrderTask;
 import com.hj.mall.ware.feign.OrderFeignClient;
-import com.hj.mall.ware.service.WareOrderTaskDetailService;
 import com.hj.mall.ware.service.WareOrderTaskService;
 import com.hj.mall.ware.service.WareSkuService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -17,7 +15,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,7 +32,6 @@ public class StockReleaseListener {
 
     private final WareSkuService wareSkuService;
     private final WareOrderTaskService wareOrderTaskService;
-    private final WareOrderTaskDetailService wareOrderTaskDetailService;
     private final OrderFeignClient orderFeignClient;
     private final ObjectMapper objectMapper;
 
@@ -47,29 +43,27 @@ public class StockReleaseListener {
     public void handleStockLockedRelease(WareOrderTaskDetail detail, Message message, com.rabbitmq.client.Channel channel) throws IOException {
         log.info("收到库存延迟解锁消息，taskDetailId={}", detail.getId());
         try {
-            // 查询工作单，获取订单号
             WareOrderTask task = wareOrderTaskService.getById(detail.getTaskId());
             if (task == null) {
                 channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
                 return;
             }
 
-            // 远程查询订单状态
             Result<Object> result = orderFeignClient.getOrderStatus(task.getOrderSn());
             if (result.getCode() == 200) {
                 Object orderData = result.getData();
+                boolean shouldRelease = false;
                 if (orderData == null) {
-                    // 订单不存在，解锁库存
-                    wareSkuService.unlockStock(detail.getId());
+                    shouldRelease = true;
                 } else {
-                    // 订单存在，检查状态
                     Map<String, Object> orderMap = objectMapper.convertValue(orderData, Map.class);
                     Integer status = (Integer) orderMap.get("status");
                     if (status != null && status == 4) {
-                        // 订单已关闭，解锁库存
-                        wareSkuService.unlockStock(detail.getId());
+                        shouldRelease = true;
                     }
-                    // 其他状态（待付款/已付款等）不解锁
+                }
+                if (shouldRelease) {
+                    wareSkuService.releaseStock(task.getId());
                 }
             }
 
@@ -89,18 +83,9 @@ public class StockReleaseListener {
         String orderSn = (String) orderTo.get("orderSn");
         log.info("收到订单关闭解锁消息，orderSn={}", orderSn);
         try {
-            // 根据订单号找到工作单
-            WareOrderTask task = wareOrderTaskService.getOne(
-                    new LambdaQueryWrapper<WareOrderTask>().eq(WareOrderTask::getOrderSn, orderSn));
+            WareOrderTask task = wareOrderTaskService.getByOrderSn(orderSn);
             if (task != null) {
-                // 找到该工作单下所有已锁定的明细
-                List<WareOrderTaskDetail> details = wareOrderTaskDetailService.list(
-                        new LambdaQueryWrapper<WareOrderTaskDetail>()
-                                .eq(WareOrderTaskDetail::getTaskId, task.getId())
-                                .eq(WareOrderTaskDetail::getLockStatus, 1));
-                for (WareOrderTaskDetail detail : details) {
-                    wareSkuService.unlockStock(detail.getId());
-                }
+                wareSkuService.releaseStock(task.getId());
             }
 
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
